@@ -46,7 +46,7 @@ import copy
 from itertools import chain, islice, permutations
 import re
 import unique_id
-import concert_conductor
+import rocon_scheduler_requests
 
 ## ROS messages
 from scheduler_msgs.msg import Resource
@@ -349,7 +349,7 @@ class ResourcePool(object):
 
         :param resources: List of ``scheduler_msgs/Resource`` messages.
 
-        :raises: :exc:`concert_conductor.FailedToStartRappError`
+        :raises: :exc:`rocon_scheduler_requests.FailedToStartRappError`
         """
         for res in resources:
             pool_res = self.pool[res.uri]
@@ -443,7 +443,7 @@ class PoolResource:
         self.priority = 0
         """ Priority of request to which this resource is currently
         assigned. """
-        self.rapp_handler = concert_conductor.RappHandler(msg)
+        self.rapp_handler = rocon_scheduler_requests.RappHandler(msg)
         """
         Handler for starting and stopping rapps on this resource.
         """
