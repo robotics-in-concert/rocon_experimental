@@ -47,6 +47,7 @@ from rocon_scheduler_requests import Scheduler, TransitionError
 from concert_msgs.msg import ConcertClients
 from scheduler_msgs.msg import KnownResources
 from scheduler_msgs.msg import Request
+import concert_conductor
 
 from .resource_pool import ResourcePool
 from .resource_pool import CurrentStatus
@@ -128,14 +129,15 @@ class SimpleSchedulerNode(object):
                 # Return it to head of queue.
                 self.ready_queue.add(elem)
                 break                   # stop looking
-
             try:
+                self.pool.start_resources(resources)
                 elem.request.grant(resources)
                 rospy.loginfo(
                     'Request granted: ' + str(elem.request.uuid))
-            except TransitionError:     # request no longer active?
-                # Return allocated resources to the pool.
-                self.pool.release_resources(resources)
+            except (concert_conductor.FailedToStartRappError,
+                    TransitionError     # TransitionError -> request no longer active?
+                    ):
+                self.pool.release_resources(resources)  # Return allocated resources to the pool.
             self.notification_set.add(elem.requester_id)
 
         # notify all affected requesters

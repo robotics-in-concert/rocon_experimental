@@ -46,6 +46,7 @@ import copy
 from itertools import chain, islice, permutations
 import re
 import unique_id
+import concert_conductor
 
 ## ROS messages
 from scheduler_msgs.msg import Resource
@@ -343,6 +344,17 @@ class ResourcePool(object):
             self.pool[res.uri].release(rq_id)
             self.changed = True
 
+    def start_resources(self, resources):
+        """ Start rapps specified by the resources list.
+
+        :param resources: List of ``scheduler_msgs/Resource`` messages.
+
+        :raises: :exc:`concert_conductor.FailedToStartRappError`
+        """
+        for res in resources:
+            pool_res = self.pool[res.uri]
+            pool_res.rapp_handler.start(res.rapp, res.remappings)
+
     def release_resources(self, resources):
         """ Release a list of *resources*.
 
@@ -431,6 +443,10 @@ class PoolResource:
         self.priority = 0
         """ Priority of request to which this resource is currently
         assigned. """
+        self.rapp_handler = concert_conductor.RappHandler(msg)
+        """
+        Handler for starting and stopping rapps on this resource.
+        """
 
     def __eq__(self, other):
         if self.uri != other.uri:
@@ -537,3 +553,5 @@ class PoolResource:
         self.priority = 0               # no longer applicable
         if self.status == CurrentStatus.ALLOCATED:  # not gone missing?
             self.status = CurrentStatus.AVAILABLE
+
+        self.rapp_handler.stop()  # make sure this resource has stopped any apps it is running
